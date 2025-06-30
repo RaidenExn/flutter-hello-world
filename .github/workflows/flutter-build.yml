@@ -1,0 +1,43 @@
+name: Build Flutter App
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.1'
+          channel: stable
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build APK (Android 13+)
+        run: flutter build apk --release --target-platform android-arm64
+
+      - name: Build iOS App (unsigned, iOS 18+)
+        run: flutter build ios --release --no-codesign
+        env:
+          CI: true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Unsigned IPA Folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-ipa
+          path: build/ios/iphoneos/Runner.app
